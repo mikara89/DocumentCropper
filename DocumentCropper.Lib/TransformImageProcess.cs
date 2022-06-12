@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace DocumentCropper.Lib
 {
-    public class TransformImageProcess : IDisposable
+    public class TransformImageProcessor : IDisposable, IImageProcessor
     {
         List<Point2f> point2Fs;
         bool IsCuted;
         Point2f[] srcPoints;
 
-        public TransformImageProcess()
+        public TransformImageProcessor()
         {
             point2Fs = new List<Point2f>();
             IsCuted = false;

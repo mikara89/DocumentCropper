@@ -1,4 +1,5 @@
 using DocumentCropper.API.Filters;
+using DocumentCropper.Lib;
 
 namespace DocumentCropper.API
 {
@@ -14,6 +15,8 @@ namespace DocumentCropper.API
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c => c.OperationFilter<SwaggerFileOperationFilter>());
+
+            builder.Services.AddTransient<IImageProcessor,TransformImageProcessor>();
 
             var app = builder.Build();
 

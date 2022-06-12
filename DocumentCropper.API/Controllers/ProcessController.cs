@@ -8,6 +8,13 @@ namespace DocumentCropper.API.Controllers
     public class ProcessController : ControllerBase
     {
 
+        private readonly IImageProcessor _processor;
+
+        public ProcessController(IImageProcessor processor)
+        {
+            _processor = processor;
+        }
+
 
         [HttpPost, DisableRequestSizeLimit]
         public async Task<IActionResult> Upload([FromForm] IFormFile file)
@@ -16,27 +23,22 @@ namespace DocumentCropper.API.Controllers
             {
                 using (var ms = file.OpenReadStream())
                 {
-                    using (var transformer = new TransformImageProcess())
+                    var watch = new System.Diagnostics.Stopwatch();
+                    watch.Start();
+                    byte[] transformedImgBytes = await _processor.ProcessAsync(ms, TransformImageProcessor.ProcessResultType.PDF);
+                    watch.Stop();
+
+                    if (transformedImgBytes is null)
                     {
-
-                        var watch = new System.Diagnostics.Stopwatch();
-                        watch.Start();
-                        byte[] transformedImgBytes = await transformer.ProcessAsync(ms, TransformImageProcess.ProcessResultType.PDF);
-                        watch.Stop();
-
-                        if (transformedImgBytes is null)
-                        {
-                            throw new Exception("Failed to transform file.");
-                        }
-                        var name = file.FileName.Replace("." + file.FileName.Split(".").Last(), ".pdf");
-
-                        Response.Headers.Add("X-process-time", watch.ElapsedMilliseconds.ToString() + "ms");
-                        Response.Headers.Add("X-input-file-size", BytesToMB(file.Length).ToString() + "MB");
-                        Response.Headers.Add("X-output-file-size", BytesToMB(transformedImgBytes.Length).ToString() + "MB");
-
-                        return File(new MemoryStream(transformedImgBytes), "application/octet-stream", name);
-
+                        throw new Exception("Failed to transform file.");
                     }
+                    var name = file.FileName.Replace("." + file.FileName.Split(".").Last(), ".pdf");
+
+                    Response.Headers.Add("X-process-time", watch.ElapsedMilliseconds.ToString() + "ms");
+                    Response.Headers.Add("X-input-file-size", BytesToMB(file.Length).ToString() + "MB");
+                    Response.Headers.Add("X-output-file-size", BytesToMB(transformedImgBytes.Length).ToString() + "MB");
+
+                    return File(new MemoryStream(transformedImgBytes), "application/octet-stream", name);
                 }
             }
             catch (Exception ex)
