@@ -29,7 +29,11 @@ namespace DocumentCropper.API.Controllers
                             throw new Exception("Failed to transform file.");
                         }
                         var name = file.FileName.Replace("." + file.FileName.Split(".").Last(), ".pdf");
-                        Response.Headers.Add("X-process-time", watch.ElapsedMilliseconds.ToString()+"ms");
+
+                        Response.Headers.Add("X-process-time", watch.ElapsedMilliseconds.ToString() + "ms");
+                        Response.Headers.Add("X-input-file-size", BytesToMB(file.Length).ToString() + "MB");
+                        Response.Headers.Add("X-output-file-size", BytesToMB(transformedImgBytes.Length).ToString() + "MB");
+
                         return File(new MemoryStream(transformedImgBytes), "application/octet-stream", name);
 
                     }
@@ -38,6 +42,11 @@ namespace DocumentCropper.API.Controllers
             catch (Exception ex)
             {
                 return Problem(ex.Message);
+            }
+
+            static double BytesToMB(long number)
+            {
+                return Math.Round(number / 1024.0 / 1024.0, 2);
             }
         }
     }
