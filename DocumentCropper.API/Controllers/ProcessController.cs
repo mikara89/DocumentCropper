@@ -18,14 +18,19 @@ namespace DocumentCropper.API.Controllers
                 {
                     using (var transformer = new TransformImageProcess())
                     {
-                        byte[] transformedImgMs = await transformer.ProcessAsync(ms, TransformImageProcess.ProcessResultType.PDF);
 
-                        if (transformedImgMs is null)
+                        var watch = new System.Diagnostics.Stopwatch();
+                        watch.Start();
+                        byte[] transformedImgBytes = await transformer.ProcessAsync(ms, TransformImageProcess.ProcessResultType.PDF);
+                        watch.Stop();
+
+                        if (transformedImgBytes is null)
                         {
                             throw new Exception("Failed to transform file.");
                         }
                         var name = file.FileName.Replace("." + file.FileName.Split(".").Last(), ".pdf");
-                        return File(new MemoryStream(transformedImgMs), "application/octet-stream", name);
+                        Response.Headers.Add("X-process-time", watch.ElapsedMilliseconds.ToString()+"ms");
+                        return File(new MemoryStream(transformedImgBytes), "application/octet-stream", name);
 
                     }
                 }
